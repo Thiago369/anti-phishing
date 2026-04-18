@@ -1,28 +1,11 @@
 
-"""### Projeto de Análise de Risco de Phishing de URL
-
-Este notebook Python tem como objetivo receber uma URL do usuário e gerar um "score de risco de phishing" (de 0 a 100), acompanhado de uma explicação detalhada dos motivos que contribuíram para o score. A análise será baseada em diversos fatores, incluindo:
-
-1.  **Idade do Domínio (WHOIS)**: Domínios recém-criados podem indicar maior risco.
-2.  **Certificado SSL**: Presença, emissor e validade do certificado. Certificados muito recentes também podem ser um fator de risco moderado.
-3.  **Estrutura da URL**: Análise de características como comprimento, número de hífens, subdomínios excessivos, uso de números no domínio e presença de palavras-chave suspeitas.
-4.  **TLD (Top-Level Domain) Suspeito**: Verificação contra uma lista de TLDs comumente associados a golpes de phishing.
-5.  **Typosquatting**: Comparação do domínio com nomes de marcas famosas para identificar possíveis tentativas de falsificação.
-6.  **Redirecionamentos**: Verificação se a URL redireciona para um domínio diferente do original.
-
-Ao final da análise, será exibido o score de risco, uma classificação (Baixo, Médio, Alto) e uma lista de todos os motivos identificados, juntamente com uma recomendação final.
-"""
-
-
-
-
+import streamlit as st
 import datetime
 import re
 from urllib.parse import urlparse
 import requests
 import tldextract
 import whois
-
 
 # --- Constants for Phishing Detection ---
 
@@ -57,6 +40,9 @@ MAX_NORMAL_SUBDOMAINS = 3
 
 # Min days for a domain to be considered 'established'
 ESTABLISHED_DOMAIN_AGE_DAYS = 180
+
+
+# --- Helper Functions (Copied from Notebook) ---
 
 def get_domain_from_url(url):
     """Extracts the main domain (e.g., example.com from www.example.com/path) from a URL."""
@@ -121,13 +107,8 @@ def check_ssl_certificate(url):
         response = requests.head(url, timeout=5, allow_redirects=True)
         if response.status_code == 200:
             reasons.append("Seguro: Certificado SSL presente (HTTPS).")
-            # More advanced SSL checks would go here, requiring 'ssl' and 'socket' modules
-            # For example, to get issuer and validity, you'd need to connect to the socket,
-            # wrap it with SSL, and then inspect the certificate.
-            # This is beyond a simple 'requests' call.
             reasons.append("Informação: Detalhes do SSL (emissor, validade) não verificados a fundo nesta etapa.")
         else:
-            # If HTTPS is used but request fails, it might still indicate issues
             score += 20
             reasons.append(f"Risco MÉDIO: HTTPS presente, mas falha na conexão ou status inesperado ({response.status_code}).")
 
@@ -166,7 +147,6 @@ def analyze_url_structure(url):
         reasons.append("Risco BAIXO: Muitos hífens no nome do domínio.")
 
     # 3. Many Subdomains
-    # tldextract handles this well by giving 'subdomain'
     extracted = tldextract.extract(url)
     subdomains_count = len(extracted.subdomain.split('.')) if extracted.subdomain else 0
     if subdomains_count > MAX_NORMAL_SUBDOMAINS:
@@ -219,14 +199,12 @@ def check_typosquatting(url):
 
     for brand in POPULAR_BRANDS:
         # Simple check: if a brand name is very similar or contained with slight modification
-        # This can be improved with Levenshtein distance or fuzzy matching libraries
-        if brand in domain_without_tld and brand != domain_without_tld: # e.g. 'googl' in 'googleservice'
+        if brand in domain_without_tld and brand != domain_without_tld:
             score += 40
             reasons.append(f"Risco ALTO: Potencial typosquatting detectado (domínio '{domain_without_tld}' é similar a '{brand}').")
             return score, reasons # Only need one match
 
         # Check for common substitutions (e.g., 'l' for 'I', '0' for 'o')
-        # This is a very basic heuristic
         if any(char in domain_without_tld for char in ['0', '1', 'l']) and brand in domain_without_tld.replace('0','o').replace('1','i').replace('l','i'):
              score += 30
              reasons.append(f"Risco ALTO: Potencial typosquatting com substituição de caracteres (domínio '{domain_without_tld}' similar a '{brand}').")
@@ -262,6 +240,16 @@ def check_redirects(url):
 
     return score, reasons
 
+def is_valid_url_custom(url):
+    """Custom basic URL validation using urllib.parse and regex."""
+    try:
+        result = urlparse(url)
+        # Check for both scheme (http, https) and network location (domain)
+        # Also ensure it starts with http/https to catch common malformed inputs
+        return all([result.scheme, result.netloc]) and bool(re.match(r'^(http|https)://', url))
+    except ValueError:
+        return False
+
 def calculate_phishing_score(url):
     """Calculates a phishing risk score for a given URL based on various factors.
        Returns the total score and a list of detailed reasons."""
@@ -272,6 +260,9 @@ def calculate_phishing_score(url):
     if not urlparse(url).scheme:
         url = "http://" + url # requests will handle redirects to https if applicable
 
+    # Basic URL validation after ensuring a scheme using custom function
+    if not is_valid_url_custom(url):
+        return 100, [f"ERRO: A URL fornecida é inválida ou não suportada: {url}"]
 
     # Factor 1: WHOIS Age
     domain = get_domain_from_url(url)
@@ -328,21 +319,40 @@ def get_final_recommendation(score):
         return "Recomendação: **Parece seguro, mas sempre use o bom senso.**"
 
 
-    print("\nAnalisando URL... Por favor, aguarde.")
-    score, reasons = calculate_phishing_score(user_url)
-    risk_level = get_risk_level(score)
-    recommendation = get_final_recommendation(score)
+# --- Streamlit UI ---
+st.set_page_config(page_title="Análise de Risco de Phishing de URL", layout="centered")
 
-    print("\n--- Resultado da Análise ---")
-    print(f"URL Analisada: {user_url}")
-    print(f"Score de Risco de Phishing: {score}/100")
-    print(f"Nível de Risco: {risk_level}")
+st.title("🕵️‍♂️ Análise de Risco de Phishing de URL")
+st.markdown("Esta ferramenta avalia o risco de phishing de uma URL e fornece uma explicação detalhada.")
 
-    print("\n--- Motivos Detectados ---")
-    if reasons:
-        for reason in reasons:
-            print(f"- {reason}")
+user_url = st.text_input("Por favor, digite a URL para análise:", placeholder="Ex: https://www.example.com")
+
+if st.button("Analisar URL"):
+    if user_url:
+        st.write("\nAnalisando URL... Por favor, aguarde.")
+
+        score, reasons = calculate_phishing_score(user_url)
+        risk_level = get_risk_level(score)
+        recommendation = get_final_recommendation(score)
+
+        st.subheader("\n--- Resultado da Análise ---")
+        st.write(f"**URL Analisada:** {user_url}")
+        st.write(f"**Score de Risco de Phishing:** {score}/100")
+
+        if risk_level == "ALTO":
+            st.error(f"**Nível de Risco:** {risk_level}")
+        elif risk_level == "MÉDIO":
+            st.warning(f"**Nível de Risco:** {risk_level}")
+        else:
+            st.success(f"**Nível de Risco:** {risk_level}")
+
+        st.subheader("\n--- Motivos Detectados ---")
+        if reasons:
+            for reason in reasons:
+                st.markdown(f"- {reason}")
+        else:
+            st.write("Nenhum motivo específico de risco detectado.")
+
+        st.markdown(f"\n{recommendation}")
     else:
-        print("Nenhum motivo específico de risco detectado.")
-
-    print(f"\n{recommendation}")
+        st.warning("Por favor, insira uma URL para análise.")
