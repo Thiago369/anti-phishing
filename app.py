@@ -332,10 +332,6 @@ def get_final_recommendation(score):
     else:
         return "Recomendação: **Parece seguro, mas sempre use o bom senso.**"
 
-# --- Main execution flow ---
-if __name__ == '__main__':
-    print("\n--- Análise de Risco de Phishing de URL ---")
-    user_url = input("Por favor, digite a URL para análise: ")
 
     print("\nAnalisando URL... Por favor, aguarde.")
     score, reasons = calculate_phishing_score(user_url)
