@@ -1,0 +1,7 @@
+print("""
+streamlit
+requests
+python-whois
+tldextract
+validators
+""") # Conteúdo para requirements.txt
