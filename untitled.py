@@ -17,7 +17,7 @@ import datetime
 import re
 from urllib.parse import urlparse
 import requests # Added
-import validators # Added
+import validators
 import tldextract # Added
 import whois # Added
 
