@@ -1,7 +1,4 @@
-print("""
-validators
 streamlit
 requests
 python-whois
 tldextract
-""") 
