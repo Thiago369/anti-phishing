@@ -1,4 +1,4 @@
-# Generated from: Cópia de Cópia de Untitled2.ipynb
+# Generated from: r22.py.app
 # Converted at: 2026-04-18T01:55:25.590Z
 # Next step (optional): refactor into modules & generate tests with RunCell
 # Quick start: pip install runcell
