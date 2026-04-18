@@ -16,10 +16,9 @@ Ao final da análise, será exibido o score de risco, uma classificação (Baixo
 import datetime
 import re
 from urllib.parse import urlparse
-import requests # Added
-import validators
-import tldextract # Added
-import whois # Added
+import requests
+import tldextract
+import whois
 
 # --- Constants for Phishing Detection ---
 
