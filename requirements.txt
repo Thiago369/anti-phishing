@@ -2,4 +2,4 @@ streamlit
 requests
 python-whois
 tldextract
-validators
+
