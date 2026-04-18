@@ -272,9 +272,6 @@ def calculate_phishing_score(url):
     if not urlparse(url).scheme:
         url = "http://" + url # requests will handle redirects to https if applicable
 
-    # Basic URL validation after ensuring a scheme
-    if not validators.url(url):
-        return 100, [f"ERRO: A URL fornecida é inválida ou não suportada: {url}"]
 
     # Factor 1: WHOIS Age
     domain = get_domain_from_url(url)
