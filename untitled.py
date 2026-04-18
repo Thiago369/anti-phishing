@@ -13,6 +13,12 @@ Este notebook Python tem como objetivo receber uma URL do usuário e gerar um "s
 Ao final da análise, será exibido o score de risco, uma classificação (Baixo, Médio, Alto) e uma lista de todos os motivos identificados, juntamente com uma recomendação final.
 """
 
+
+
+
+
+
+
 import datetime
 import re
 from urllib.parse import urlparse
