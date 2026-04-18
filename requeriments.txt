@@ -1,6 +1,5 @@
 print("""
 streamlit
-validators
 requests
 python-whois
 tldextract
