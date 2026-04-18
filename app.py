@@ -25,6 +25,7 @@ from urllib.parse import urlparse
 import requests
 import tldextract
 import whois
+import validators # Added
 
 # --- Constants for Phishing Detection ---
 
