@@ -322,7 +322,7 @@ def get_final_recommendation(score):
 # --- Streamlit UI ---
 st.set_page_config(page_title="Análise de Risco de Phishing de URL", layout="centered")
 
-st.title("🕵️‍♂️ Anti-Phishing: Este URL é seguro?")
+st.title("🕵️‍♂️ Verificador de links: Este URL é seguro?")
 st.markdown("Esta ferramenta avalia o risco de phishing de uma URL e fornece uma explicação detalhada.")
 
 user_url = st.text_input("Por favor, digite a URL para análise:", placeholder="Ex: https://www.example.com")
